@@ -19,61 +19,55 @@ wire zero,cout,overflow;
 wire [31:0]imm_4 = 4;
 wire branch;	
 ProgramCounter PC(
-        .clk_i(),      
-	    .rst_i(),     
-	    .pc_i(),   
-	    .pc_o() 
+        .clk_i(clk_i),      
+	    .rst_i(rst_i),     
+	    .pc_i(pc_i),   
+	    .pc_o(pc_o) 
 	    );
-
 Instr_Memory IM(
-        .addr_i(),  
-	    .instr_o()    
+        .addr_i(pc_o),  
+	    .instr_o(instr)    
 	    );
-		
-Reg_File RF(
-        .clk_i(),      
-		.rst_i(),     
-        .RSaddr_i(),  
-		.RTaddr_i(),  
- 		.RDaddr_i(),  
-        .RDdata_i(), 
- 		.RegWrite_i(),
- 		.RSdata_o(),  
-        .RTdata_o()   
-	    );
-		
-Decoder Decoder(
-		.instr_i(),
-		.ALUSrc(),
-		.RegWrite(),
-		.Branch(),
-		.ALUOp()
-	    );	
-
 Adder PC_plus_4_Adder(
-		.src1_i(),
-		.src2_i(),
-		.sum_o()
+		.src1_i(pc_o),
+		.src2_i(32'b00000000000000000000000000000100),
+		.sum_o(pc_i)
 	    );
-			
+Decoder Decoder(
+		.instr_i(instr),
+		.ALUSrc(ALUSrc),
+		.RegWrite(RegWrite),
+		.Branch(branch),
+		.ALUOp(ALUOp)
+	    );			
+Reg_File RF(
+        .clk_i(clk_i),      
+		.rst_i(rst_i),     
+        .RSaddr_i(instr[19:15]),  
+		.RTaddr_i(instr[24:20]),  
+ 		.RDaddr_i(instr[11:7]),  
+        .RDdata_i(ALUresult), 
+ 		.RegWrite_i(RegWrite),
+ 		.RSdata_o(RSdata_o),  
+        .RTdata_o(RTdata_o)   
+	    );
 ALU_Ctrl ALU_Ctrl(
-		.instr(),
-		.ALUOp(),
-		.ALU_Ctrl_o()
+		.instr({instr[30],instr[14:12]}),
+		.ALUOp(ALUOp),
+		.ALU_Ctrl_o(ALU_control)
 		);
 		
 alu alu(
-		.rst_n(),
-		.src1(),
-		.src2(),
-		.ALU_control(),
-		.result(),
-		.zero(),
-		.cout(),
-		.overflow()
+		.rst_n(~rst_i),
+		.src1(instr[19:15]),
+		.src2(instr[24:20]),
+		.ALU_control(ALU_control),
+		.result(ALUresult),
+		.zero(zero),
+		.cout(cout),
+		.overflow(overflow)
 		);
-	
-		
+
 endmodule
 		  
 
